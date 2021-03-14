@@ -4,33 +4,13 @@ using System.Linq;
 
 namespace TestHierarchicalСlustering
 {
-    class HCDistanceMatrix
-    {
-        public Dictionary<(int, int), double> matrix;
-        public HCDistanceMatrix()
-        {
-            matrix = new();
-        }
-        static private (int, int) Ordered(HCCluster a, HCCluster b)
-        {
-            int i = Math.Min(a.Order, b.Order);
-            int j = Math.Max(a.Order, b.Order);
-            return (i, j);
-        }
-        public double GetDistance(HCCluster a, HCCluster b)
-        {
-            return matrix[Ordered(a, b)];
-        }
-        public void SetDistance(HCCluster a, HCCluster b, double distance)
-        {
-            matrix[Ordered(a, b)] = distance;
-        }
-    }
-
+    using MDict = Dictionary<(int, int), double>;
+    
     class HCOneThreadedAlgorithm
     {
+        
         public HCState State;
-        public HCDistanceMatrix DistanceMatrix;
+        public DistanceMatrix<MDict> DistanceMatrix;
 
 
         public HCClusterPair FindClosestPair(
@@ -63,7 +43,7 @@ namespace TestHierarchicalСlustering
         public void InitState(List<HCPoint> points)
         {
             State = new();
-            DistanceMatrix = new();
+            DistanceMatrix = new(new MDict());
 
             var clusters = HCCluster.ClusterPerPoint(points);
             var closest = FindClosestPair(HCCluster.AllPairs(clusters), Metric.SingleLinkage);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace TestHierarchicalСlustering
@@ -29,6 +28,7 @@ namespace TestHierarchicalСlustering
             }
         }
     }
+
     class HCCluster
     {
         private static int nextClusterOrder = 0;
@@ -73,7 +73,6 @@ namespace TestHierarchicalСlustering
             }
             return clusters;
         }
-
         public static IEnumerable<(HCCluster I, HCCluster J)> AllPairs(List<HCCluster> clusters)
         {
             for (var i = 0; i < clusters.Count; i++)
@@ -84,7 +83,6 @@ namespace TestHierarchicalСlustering
                 }
             }
         }
-
         public IEnumerable<(HCCluster I, HCCluster J)> PairsWith(List<HCCluster> clusters)
         {
             foreach (HCCluster cluster in clusters)
@@ -92,8 +90,8 @@ namespace TestHierarchicalСlustering
                 yield return (this, cluster);
             }
         }
-
     }
+
     class HCClusterPair
     {
         public HCCluster I;
@@ -107,6 +105,7 @@ namespace TestHierarchicalСlustering
             Distance = distance;
         }
     }
+
     class HCIteration
     {
         public readonly List<HCCluster> Clusters;
@@ -130,6 +129,7 @@ namespace TestHierarchicalСlustering
             return sb.ToString();
         }
     }
+
     class HCState
     {
         public readonly List<HCIteration> Iterations;
