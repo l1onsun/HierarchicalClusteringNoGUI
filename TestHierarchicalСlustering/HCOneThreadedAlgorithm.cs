@@ -86,7 +86,7 @@ namespace TestHierarchicalСlustering
             );
             newClusters.Add(joinedCluster);
 
-
+            Console.WriteLine($"{closest.Distance.ToString()}");
             if (closest.Distance > prevIteration.ClosestPair.Distance)
             {
                 closest = FindClosestPair(HCCluster.AllPairs(newClusters), DistanceMatrix.GetDistance);

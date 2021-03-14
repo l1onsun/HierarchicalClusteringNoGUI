@@ -34,6 +34,10 @@ namespace TestHierarchicalСlustering
             });
 
             HCClusterPair closest = cq.Min();
+            if (closest == null)
+            {
+                closest = new(null, null, double.PositiveInfinity);
+            }
             return closest;
         }
 
