@@ -163,8 +163,7 @@ namespace TestHierarchicalСlustering
             return (i, j);
         }
         public double GetDistance(HCCluster a, HCCluster b);
-        public void SetDistance(HCCluster a, HCCluster b, double distance);
-
+        public double FindDistance(HCCluster a, HCCluster b, Func<HCCluster, HCCluster, double> distanceFunc);
         public HCClusterPair FindClosestPair(
             IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
             Func<HCCluster, HCCluster, double> distanceFunc

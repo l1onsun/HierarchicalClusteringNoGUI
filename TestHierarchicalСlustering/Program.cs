@@ -16,7 +16,7 @@ namespace TestHierarchicalСlustering
             Console.WriteLine(RuntimeInformation.FrameworkDescription);
             Console.WriteLine();
 
-            List<HCPoint> points = DataReader.FromCsv("points.csv").ToPoints();
+            List<HCPoint> points = DataReader.FromCsv("points2.csv").ToPoints();
 
 
             Console.WriteLine("Start sync HC:");
@@ -24,7 +24,7 @@ namespace TestHierarchicalСlustering
             HCSyncAlgorithm algorithmSync = new();
             algorithmSync.InitState(points);
 
-            while (algorithmSync.Step()) { }
+            while (algorithmSync.Step());
             Console.WriteLine(algorithmSync.State);
 
 
@@ -33,7 +33,7 @@ namespace TestHierarchicalСlustering
             HCConcurrentAlgorithm algorithmConcurrent = new();
             algorithmConcurrent.InitState(points);
 
-            while (algorithmConcurrent.Step()) { }
+            while (algorithmConcurrent.Step());
             Console.WriteLine(algorithmConcurrent.State);
         }
     }

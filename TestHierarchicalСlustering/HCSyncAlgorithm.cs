@@ -15,9 +15,11 @@ namespace TestHierarchicalСlustering
         {
             return matrix[IDistanceMatrix.Ordered(a, b)];
         }
-        public void SetDistance(HCCluster a, HCCluster b, double distance)
+        public double FindDistance(HCCluster a, HCCluster b, Func<HCCluster, HCCluster, double> distanceFunc)
         {
+            double distance = distanceFunc(a, b);
             matrix[IDistanceMatrix.Ordered(a, b)] = distance;
+            return distance;
         }
         public HCClusterPair FindClosestPair(
             IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
@@ -32,8 +34,7 @@ namespace TestHierarchicalСlustering
 
             foreach ((HCCluster I, HCCluster J) clusterPair in clusterPairs)
             {
-                double distance = distanceFunc(clusterPair.I, clusterPair.J);
-                SetDistance(clusterPair.I, clusterPair.J, distance);
+                double distance = FindDistance(clusterPair.I, clusterPair.J, distanceFunc);
 
                 if (distance < closest.Distance)
                 {
