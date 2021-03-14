@@ -33,6 +33,12 @@ namespace TestHierarchicalСlustering
     {
         HCState State;
         HCConcurentDistanceMatrix DistanceMatrix;
+
+        public void FindClosest(IEnumerable<(HCCluster I, HCCluster J)> clusters, Func<HCCluster, HCCluster, double> distanceFunc)
+        {
+
+        }
+
         public void InitState(List<HCPoint> points)
         {
             State = new();
@@ -56,11 +62,11 @@ namespace TestHierarchicalСlustering
                 }
             }
 
-            State.Iterations.Add(new HCIteration(
-                clusters: clusters,
-                minDistance: minDistance,
-                closestClusters: closest
-            ));
+            //State.Iterations.Add(new HCIteration(
+            //    clusters: clusters,
+            //    minDistance: minDistance,
+            //    closestClusters: closest
+            //));
         }
     }
 }

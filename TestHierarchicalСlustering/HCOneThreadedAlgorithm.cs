@@ -32,54 +32,65 @@ namespace TestHierarchicalСlustering
         public HCState State;
         public HCDistanceMatrix DistanceMatrix;
 
-        //public (HCCluster clusterI, HCCluster clusterJ, double minDistance) FindClosest(List<HCCluster> clusters, Func<HCCluster, HCCluster, double> distanceFunc)
-        //{
-        //    double minDistance = double.PositiveInfinity;
-        //    (HCCluster I, HCCluster J) closest = (null, null);
+        
+        public HCClusterPair FindClosestPair(
+            IEnumerable<(HCCluster I, HCCluster J)> clusterPairs, 
+            Func<HCCluster, HCCluster, double> distanceFunc
+        )
+        {
+            HCClusterPair closest = new(
+                clusterI: null,
+                clusterJ: null,
+                distance: double.PositiveInfinity
+            );
 
-        //    for (var i = 0; i < clusters.Count; i++)
-        //    {
-        //        for (var j = i + 1; j < clusters.Count; j++)
-        //        {
-        //            double distance = distanceFunc(clusters[i], clusters[j]);
-        //            State.DistanceMatrix.SetDistance(clusters[i], clusters[j], distance);
-        //            if (distance < minDistance)
-        //            {
-        //                closest = (clusters[i], clusters[j]);
-        //                minDistance = distance;
-        //            }
-        //        }
-        //    }
-        //    return (closest.I, closest.J, minDistance)
-        //}
+            foreach ((HCCluster I, HCCluster J) clusterPair in clusterPairs)
+            {
+                double distance = distanceFunc(clusterPair.I, clusterPair.J);
+                DistanceMatrix.SetDistance(clusterPair.I, clusterPair.J, distance);
 
+                if (distance < closest.Distance)
+                {
+                    (closest.I, closest.J) = clusterPair;
+                    closest.Distance = distance;
+                }
+            }
+
+            return closest;
+        }
+
+        
         public void InitState(List<HCPoint> points)
         {
             State = new();
             DistanceMatrix = new();
 
             var clusters = HCCluster.ClusterPerPoint(points);
-            (HCCluster, HCCluster) closest = (null, null);
-            double minDistance = double.PositiveInfinity;
 
-            for (var i = 0; i < clusters.Count; i++)
-            {
-                for (var j = i + 1; j < clusters.Count; j++)
-                {
-                    double distance = Metric.SingleLinkage(clusters[i], clusters[j]);
-                    DistanceMatrix.SetDistance(clusters[i], clusters[j], distance);
-                    if (distance < minDistance)
-                    {
-                        closest = (clusters[i], clusters[j]);
-                        minDistance = distance;
-                    }
-                }
-            }
+            var closest = FindClosestPair(HCCluster.AllPairs(clusters), Metric.SingleLinkage);
+
+
+            //(HCCluster, HCCluster) closest = (null, null);
+            //double minDistance = double.PositiveInfinity
+
+
+            //for (var i = 0; i < clusters.Count; i++)
+            //{
+            //    for (var j = i + 1; j < clusters.Count; j++)
+            //    {
+            //        double distance = Metric.SingleLinkage(clusters[i], clusters[j]);
+            //        DistanceMatrix.SetDistance(clusters[i], clusters[j], distance);
+            //        if (distance < minDistance)
+            //        {
+            //            closest = (clusters[i], clusters[j]);
+            //            minDistance = distance;
+            //        }
+            //    }
+            //}
 
             State.Iterations.Add(new HCIteration(
                 clusters: clusters,
-                minDistance: minDistance,
-                closestClusters: closest
+                closestPair: closest
             ));
         }
 
@@ -97,8 +108,8 @@ namespace TestHierarchicalСlustering
             {
                 return false;
             }
-            HCCluster clusterI = prevIteration.ClosestClusters.I;
-            HCCluster clusterJ = prevIteration.ClosestClusters.J;
+            HCCluster clusterI = prevIteration.ClosestPair.I;
+            HCCluster clusterJ = prevIteration.ClosestPair.J;
             HCCluster joinedCluster = HCCluster.Join(clusterI, clusterJ);
 
             List<HCCluster> newClusters = new();
@@ -122,7 +133,7 @@ namespace TestHierarchicalСlustering
                 }
             }
 
-            if (newMinDistance > prevIteration.MinDistance)
+            if (newMinDistance > prevIteration.ClosestPair.Distance)
             {
                 newMinDistance = double.PositiveInfinity;
                 closest = (null, null);
@@ -143,8 +154,7 @@ namespace TestHierarchicalСlustering
 
             State.Iterations.Add(new HCIteration(
                 clusters: newClusters,
-                minDistance: newMinDistance,
-                closestClusters: closest
+                closestPair: new HCClusterPair(closest.Item1, closest.Item2, newMinDistance)
             ));
             return true;
         }

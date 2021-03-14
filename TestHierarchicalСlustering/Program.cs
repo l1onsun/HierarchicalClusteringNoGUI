@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+using System.Runtime.InteropServices;
+
 namespace TestHierarchicalСlustering
 {
     public static class HashSetExt
@@ -26,6 +28,9 @@ namespace TestHierarchicalСlustering
         }
         static void Main()
         {
+            Console.WriteLine("----");
+            Console.WriteLine(RuntimeInformation.FrameworkDescription);
+
             List<HCPoint> points = DataReader.FromCsv("points2.csv").ToPoints();
             
             HCOneThreadedAlgorithm algorithm = new();

@@ -73,22 +73,45 @@ namespace TestHierarchicalСlustering
             }
             return clusters;
         }
+
+        public static IEnumerable<(HCCluster I, HCCluster J)> AllPairs(List<HCCluster> clusters)
+        {
+            for (var i = 0; i < clusters.Count; i++)
+            {
+                for (var j = i + 1; j < clusters.Count; j++)
+                {
+                    yield return (clusters[i], clusters[j]);
+                }
+            }
+        }
+
+    }
+    class HCClusterPair
+    {
+        public HCCluster I;
+        public HCCluster J;
+        public double Distance;
+
+        public HCClusterPair(HCCluster clusterI, HCCluster clusterJ, double distance)
+        {
+            I = clusterI;
+            J = clusterJ;
+            Distance = distance;
+        }
     }
     class HCIteration
     {
         public readonly List<HCCluster> Clusters;
-        public (HCCluster I, HCCluster J) ClosestClusters;
-        public double MinDistance;
+        public HCClusterPair ClosestPair;
 
-        public HCIteration(List<HCCluster> clusters, double minDistance, (HCCluster I, HCCluster J) closestClusters)
+        public HCIteration(List<HCCluster> clusters, HCClusterPair closestPair)
         {
             this.Clusters = clusters;
-            this.MinDistance = minDistance;
-            this.ClosestClusters = closestClusters;
+            this.ClosestPair = closestPair;
         }
         public override string ToString()
         {
-            StringBuilder sb = new($"< {MinDistance:0.####}: ");
+            StringBuilder sb = new($"< {ClosestPair.Distance:0.####}: ");
             sb.Append(new String(' ', Math.Max(0, 10 - sb.Length)));
 
             foreach (HCCluster cluster in this.Clusters)
