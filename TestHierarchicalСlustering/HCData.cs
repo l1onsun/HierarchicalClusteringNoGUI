@@ -148,9 +148,26 @@ namespace TestHierarchicalСlustering
             StringBuilder sb = new();
             foreach (HCIteration i in this.Iterations)
             {
-                sb.Append(i.ToString());
+                sb.AppendLine(i.ToString());
             }
             return sb.ToString();
         }
+    }
+
+    interface IDistanceMatrix
+    {
+        static public (int, int) Ordered(HCCluster a, HCCluster b)
+        {
+            int i = Math.Min(a.Order, b.Order);
+            int j = Math.Max(a.Order, b.Order);
+            return (i, j);
+        }
+        public double GetDistance(HCCluster a, HCCluster b);
+        public void SetDistance(HCCluster a, HCCluster b, double distance);
+
+        public HCClusterPair FindClosestPair(
+            IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
+            Func<HCCluster, HCCluster, double> distanceFunc
+        );
     }
 }

@@ -1,49 +1,32 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace TestHierarchicalСlustering
 {
-    
 
-    class HCMultiThreadedAlgorithm
+    class HCBaseAlgorithm<Matrix> where Matrix : IDistanceMatrix
     {
-        public HCState State;
-        public ConcurrentDistanceMatrix DistanceMatrix;
 
-        public HCClusterPair FindClosestPair(
+        public HCState State;
+        public Matrix DistanceMatrix;
+
+        public virtual HCClusterPair FindClosestPair(
             IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
             Func<HCCluster, HCCluster, double> distanceFunc
         )
         {
-            ConcurrentQueue<HCClusterPair> cq = new();
-
-            Parallel.ForEach(clusterPairs, clusterPair =>
-            {
-                double distance = distanceFunc(clusterPair.I, clusterPair.J);
-                DistanceMatrix.SetDistance(clusterPair.I, clusterPair.J, distance);
-                cq.Enqueue(new(
-                        clusterI: clusterPair.I,
-                        clusterJ: clusterPair.J,
-                        distance: distance
-                ));
-            });
-
-            HCClusterPair closest = cq.AsParallel().Min();
-            if (closest == null)
-            {
-                closest = new(null, null, double.PositiveInfinity);
-            }
-            return closest;
+            return DistanceMatrix.FindClosestPair(clusterPairs, distanceFunc);
         }
 
+        public HCBaseAlgorithm(Matrix distanceMatrix)
+        {
+            this.DistanceMatrix = distanceMatrix;
+        }
 
         public void InitState(List<HCPoint> points)
         {
             State = new();
-            DistanceMatrix = new();
 
             var clusters = HCCluster.ClusterPerPoint(points);
             var closest = FindClosestPair(HCCluster.AllPairs(clusters), Metric.SingleLinkage);
@@ -79,7 +62,6 @@ namespace TestHierarchicalСlustering
             );
             newClusters.Add(joinedCluster);
 
-
             if (closest.Distance > prevIteration.ClosestPair.Distance)
             {
                 closest = FindClosestPair(HCCluster.AllPairs(newClusters), DistanceMatrix.GetDistance);
@@ -96,5 +78,6 @@ namespace TestHierarchicalСlustering
         {
             return State.Iterations.Last().ToString();
         }
+
     }
 }
