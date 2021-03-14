@@ -6,14 +6,12 @@ using System.Threading.Tasks;
 
 namespace TestHierarchicalСlustering
 {
-    using MDict = ConcurrentDictionary<(int, int), double>;
+    
 
     class HCMultiThreadedAlgorithm
     {
-
         public HCState State;
-        public DistanceMatrix<MDict> DistanceMatrix;
-
+        public ConcurrentDistanceMatrix DistanceMatrix;
 
         public HCClusterPair FindClosestPair(
             IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
@@ -33,7 +31,7 @@ namespace TestHierarchicalСlustering
                 ));
             });
 
-            HCClusterPair closest = cq.Min();
+            HCClusterPair closest = cq.AsParallel().Min();
             if (closest == null)
             {
                 closest = new(null, null, double.PositiveInfinity);
@@ -45,7 +43,7 @@ namespace TestHierarchicalСlustering
         public void InitState(List<HCPoint> points)
         {
             State = new();
-            DistanceMatrix = new(new MDict());
+            DistanceMatrix = new();
 
             var clusters = HCCluster.ClusterPerPoint(points);
             var closest = FindClosestPair(HCCluster.AllPairs(clusters), Metric.SingleLinkage);
@@ -54,13 +52,6 @@ namespace TestHierarchicalСlustering
                 clusters: clusters,
                 closestPair: closest
             ));
-        }
-
-        double LanceWillamsSingleLinkage(HCCluster joinedA, HCCluster joinedB, HCCluster other)
-        {
-            return 0.5 * DistanceMatrix.GetDistance(joinedA, other)
-                   + 0.5 * DistanceMatrix.GetDistance(joinedB, other)
-                   - 0.5 * Math.Abs(DistanceMatrix.GetDistance(joinedA, other) - DistanceMatrix.GetDistance(joinedB, other));
         }
 
         public bool Step()
@@ -84,7 +75,7 @@ namespace TestHierarchicalСlustering
             }
             var closest = FindClosestPair(
                 clusterPairs: joinedCluster.PairsWith(newClusters),
-                distanceFunc: (joinedCluster, other) => LanceWillamsSingleLinkage(clusterI, clusterJ, other)
+                distanceFunc: (joinedCluster, other) => Metric.LanceWillamsSingleLinkage(DistanceMatrix, clusterI, clusterJ, other)
             );
             newClusters.Add(joinedCluster);
 

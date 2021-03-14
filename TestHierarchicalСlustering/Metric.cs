@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace TestHierarchicalСlustering
@@ -21,28 +22,58 @@ namespace TestHierarchicalСlustering
             }
             return minDistance;
         }
+
+        public static double LanceWillamsSingleLinkage(IDistanceMatrix dm, HCCluster joinedA, HCCluster joinedB, HCCluster other)
+        {
+            return 0.5 * dm.GetDistance(joinedA, other)
+                   + 0.5 * dm.GetDistance(joinedB, other)
+                   - 0.5 * Math.Abs(dm.GetDistance(joinedA, other) - dm.GetDistance(joinedB, other));
+        }
     }
 
-    class DistanceMatrix<Matrix> where Matrix : IDictionary<(int, int), double>
+    interface IDistanceMatrix
     {
-        private readonly Matrix matrix;
-        public DistanceMatrix(Matrix matrix)
-        {
-            this.matrix = matrix;
-        }
-        static private (int, int) Ordered(HCCluster a, HCCluster b)
+        static public (int, int) Ordered(HCCluster a, HCCluster b)
         {
             int i = Math.Min(a.Order, b.Order);
             int j = Math.Max(a.Order, b.Order);
             return (i, j);
         }
+        public double GetDistance(HCCluster a, HCCluster b);
+        public void SetDistance(HCCluster a, HCCluster b, double distance);
+    }
+
+    class DistanceMatrix : IDistanceMatrix
+    {
+        private readonly Dictionary<(int, int), double> matrix;
+        public DistanceMatrix()
+        {
+            this.matrix = new();
+        }
         public double GetDistance(HCCluster a, HCCluster b)
         {
-            return matrix[Ordered(a, b)];
+            return matrix[IDistanceMatrix.Ordered(a, b)];
         }
         public void SetDistance(HCCluster a, HCCluster b, double distance)
         {
-            matrix[Ordered(a, b)] = distance;
+            matrix[IDistanceMatrix.Ordered(a, b)] = distance;
+        }
+    }
+
+    class ConcurrentDistanceMatrix : IDistanceMatrix
+    {
+        private readonly ConcurrentDictionary<(int, int), double> matrix;
+        public ConcurrentDistanceMatrix()
+        {
+            this.matrix = new();
+        }
+        public double GetDistance(HCCluster a, HCCluster b)
+        {
+            return matrix[IDistanceMatrix.Ordered(a, b)];
+        }
+        public void SetDistance(HCCluster a, HCCluster b, double distance)
+        {
+            matrix[IDistanceMatrix.Ordered(a, b)] = distance;
         }
     }
 }

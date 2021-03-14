@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace TestHierarchicalСlustering
-{
-    using MDict = Dictionary<(int, int), double>;
-    
+{   
     class HCOneThreadedAlgorithm
     {
         
         public HCState State;
-        public DistanceMatrix<MDict> DistanceMatrix;
+        public DistanceMatrix DistanceMatrix;
 
 
         public HCClusterPair FindClosestPair(
@@ -43,7 +41,7 @@ namespace TestHierarchicalСlustering
         public void InitState(List<HCPoint> points)
         {
             State = new();
-            DistanceMatrix = new(new MDict());
+            DistanceMatrix = new();
 
             var clusters = HCCluster.ClusterPerPoint(points);
             var closest = FindClosestPair(HCCluster.AllPairs(clusters), Metric.SingleLinkage);
@@ -52,13 +50,6 @@ namespace TestHierarchicalСlustering
                 clusters: clusters,
                 closestPair: closest
             ));
-        }
-
-        double LanceWillamsSingleLinkage(HCCluster joinedA, HCCluster joinedB, HCCluster other)
-        {
-            return 0.5 * DistanceMatrix.GetDistance(joinedA, other)
-                   + 0.5 * DistanceMatrix.GetDistance(joinedB, other)
-                   - 0.5 * Math.Abs(DistanceMatrix.GetDistance(joinedA, other) - DistanceMatrix.GetDistance(joinedB, other));
         }
 
         public bool Step()
@@ -82,7 +73,7 @@ namespace TestHierarchicalСlustering
             }
             var closest = FindClosestPair(
                 clusterPairs: joinedCluster.PairsWith(newClusters),
-                distanceFunc: (joinedCluster, other) => LanceWillamsSingleLinkage(clusterI, clusterJ, other)
+                distanceFunc: (joinedCluster, other) => Metric.LanceWillamsSingleLinkage(DistanceMatrix, clusterI, clusterJ, other)
             );
             newClusters.Add(joinedCluster);
 
