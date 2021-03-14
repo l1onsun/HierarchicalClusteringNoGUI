@@ -31,7 +31,7 @@ namespace TestHierarchicalСlustering
             Console.WriteLine("----");
             Console.WriteLine(RuntimeInformation.FrameworkDescription);
 
-            List<HCPoint> points = DataReader.FromCsv("points2.csv").ToPoints();
+            List<HCPoint> points = DataReader.FromCsv("points.csv").ToPoints();
             
             HCOneThreadedAlgorithm algorithm = new();
             algorithm.InitState(points);

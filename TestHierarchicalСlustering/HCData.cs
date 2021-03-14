@@ -85,6 +85,14 @@ namespace TestHierarchicalСlustering
             }
         }
 
+        public IEnumerable<(HCCluster I, HCCluster J)> PairsWith(List<HCCluster> clusters)
+        {
+            foreach (HCCluster cluster in clusters)
+            {
+                yield return (this, cluster);
+            }
+        }
+
     }
     class HCClusterPair
     {

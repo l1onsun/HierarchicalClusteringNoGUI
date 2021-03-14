@@ -32,9 +32,9 @@ namespace TestHierarchicalСlustering
         public HCState State;
         public HCDistanceMatrix DistanceMatrix;
 
-        
+
         public HCClusterPair FindClosestPair(
-            IEnumerable<(HCCluster I, HCCluster J)> clusterPairs, 
+            IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
             Func<HCCluster, HCCluster, double> distanceFunc
         )
         {
@@ -59,34 +59,14 @@ namespace TestHierarchicalСlustering
             return closest;
         }
 
-        
+
         public void InitState(List<HCPoint> points)
         {
             State = new();
             DistanceMatrix = new();
 
             var clusters = HCCluster.ClusterPerPoint(points);
-
             var closest = FindClosestPair(HCCluster.AllPairs(clusters), Metric.SingleLinkage);
-
-
-            //(HCCluster, HCCluster) closest = (null, null);
-            //double minDistance = double.PositiveInfinity
-
-
-            //for (var i = 0; i < clusters.Count; i++)
-            //{
-            //    for (var j = i + 1; j < clusters.Count; j++)
-            //    {
-            //        double distance = Metric.SingleLinkage(clusters[i], clusters[j]);
-            //        DistanceMatrix.SetDistance(clusters[i], clusters[j], distance);
-            //        if (distance < minDistance)
-            //        {
-            //            closest = (clusters[i], clusters[j]);
-            //            minDistance = distance;
-            //        }
-            //    }
-            //}
 
             State.Iterations.Add(new HCIteration(
                 clusters: clusters,
@@ -113,48 +93,28 @@ namespace TestHierarchicalСlustering
             HCCluster joinedCluster = HCCluster.Join(clusterI, clusterJ);
 
             List<HCCluster> newClusters = new();
-            newClusters.Add(joinedCluster);
-
-            var newMinDistance = double.PositiveInfinity;
-            (HCCluster, HCCluster) closest = (null, null);
             foreach (HCCluster oldCluster in prevIteration.Clusters)
             {
                 if (oldCluster != clusterI && oldCluster != clusterJ)
                 {
                     newClusters.Add(oldCluster);
-
-                    double distance = LanceWillamsSingleLinkage(clusterI, clusterJ, oldCluster);
-                    if (distance < newMinDistance)
-                    {
-                        newMinDistance = distance;
-                        closest = (joinedCluster, oldCluster);
-                    }
-                    DistanceMatrix.SetDistance(oldCluster, joinedCluster, distance);
                 }
             }
+            var closest = FindClosestPair(
+                clusterPairs: joinedCluster.PairsWith(newClusters),
+                distanceFunc: (joinedCluster, other) => LanceWillamsSingleLinkage(clusterI, clusterJ, other)
+            );
+            newClusters.Add(joinedCluster);
 
-            if (newMinDistance > prevIteration.ClosestPair.Distance)
+
+            if (closest.Distance > prevIteration.ClosestPair.Distance)
             {
-                newMinDistance = double.PositiveInfinity;
-                closest = (null, null);
-                for (var i = 0; i < newClusters.Count; i++)
-                {
-                    for (var j = i + 1; j < newClusters.Count; j++)
-                    {
-
-                        double distance = DistanceMatrix.GetDistance(newClusters[i], newClusters[j]);
-                        if (distance < newMinDistance)
-                        {
-                            newMinDistance = distance;
-                            closest = (newClusters[i], newClusters[j]);
-                        }
-                    }
-                }
+                closest = FindClosestPair(HCCluster.AllPairs(newClusters), DistanceMatrix.GetDistance);
             }
 
             State.Iterations.Add(new HCIteration(
                 clusters: newClusters,
-                closestPair: new HCClusterPair(closest.Item1, closest.Item2, newMinDistance)
+                closestPair: closest
             ));
             return true;
         }
