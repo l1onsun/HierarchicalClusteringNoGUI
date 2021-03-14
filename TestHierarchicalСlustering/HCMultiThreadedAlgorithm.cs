@@ -2,71 +2,104 @@
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace TestHierarchicalСlustering
 {
-    class HCConcurentDistanceMatrix
-    {
-        public ConcurrentDictionary<(int, int), double> matrix;
-        public HCConcurentDistanceMatrix()
-        {
-            matrix = new();
-        }
-        static private (int, int) Ordered(HCCluster a, HCCluster b)
-        {
-            int i = Math.Min(a.Order, b.Order);
-            int j = Math.Max(a.Order, b.Order);
-            return (i, j);
-        }
-        public double GetDistance(HCCluster a, HCCluster b)
-        {
-            return matrix[Ordered(a, b)];
-        }
-        public void SetDistance(HCCluster a, HCCluster b, double distance)
-        {
-            matrix[Ordered(a, b)] = distance;
-        }
-    }
+    using MDict = ConcurrentDictionary<(int, int), double>;
+
     class HCMultiThreadedAlgorithm
     {
-        HCState State;
-        HCConcurentDistanceMatrix DistanceMatrix;
 
-        public void FindClosest(IEnumerable<(HCCluster I, HCCluster J)> clusters, Func<HCCluster, HCCluster, double> distanceFunc)
+        public HCState State;
+        public DistanceMatrix<MDict> DistanceMatrix;
+
+
+        public HCClusterPair FindClosestPair(
+            IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
+            Func<HCCluster, HCCluster, double> distanceFunc
+        )
         {
+            ConcurrentQueue<HCClusterPair> cq = new();
 
+            Parallel.ForEach(clusterPairs, clusterPair =>
+            {
+                double distance = distanceFunc(clusterPair.I, clusterPair.J);
+                DistanceMatrix.SetDistance(clusterPair.I, clusterPair.J, distance);
+                cq.Enqueue(new(
+                        clusterI: clusterPair.I,
+                        clusterJ: clusterPair.J,
+                        distance: distance
+                ));
+            });
+
+            HCClusterPair closest = cq.Min();
+            return closest;
         }
+
 
         public void InitState(List<HCPoint> points)
         {
             State = new();
-            DistanceMatrix = new();
+            DistanceMatrix = new(new MDict());
 
             var clusters = HCCluster.ClusterPerPoint(points);
-            (HCCluster, HCCluster) closest = (null, null);
-            double minDistance = double.PositiveInfinity;
+            var closest = FindClosestPair(HCCluster.AllPairs(clusters), Metric.SingleLinkage);
 
-            for (var i = 0; i < clusters.Count; i++)
+            State.Iterations.Add(new HCIteration(
+                clusters: clusters,
+                closestPair: closest
+            ));
+        }
+
+        double LanceWillamsSingleLinkage(HCCluster joinedA, HCCluster joinedB, HCCluster other)
+        {
+            return 0.5 * DistanceMatrix.GetDistance(joinedA, other)
+                   + 0.5 * DistanceMatrix.GetDistance(joinedB, other)
+                   - 0.5 * Math.Abs(DistanceMatrix.GetDistance(joinedA, other) - DistanceMatrix.GetDistance(joinedB, other));
+        }
+
+        public bool Step()
+        {
+            var prevIteration = State.Iterations.Last();
+            if (prevIteration.Clusters.Count <= 1)
             {
-                for (var j = i + 1; j < clusters.Count; j++)
+                return false;
+            }
+            HCCluster clusterI = prevIteration.ClosestPair.I;
+            HCCluster clusterJ = prevIteration.ClosestPair.J;
+            HCCluster joinedCluster = HCCluster.Join(clusterI, clusterJ);
+
+            List<HCCluster> newClusters = new();
+            foreach (HCCluster oldCluster in prevIteration.Clusters)
+            {
+                if (oldCluster != clusterI && oldCluster != clusterJ)
                 {
-                    double distance = Metric.SingleLinkage(clusters[i], clusters[j]);
-                    DistanceMatrix.SetDistance(clusters[i], clusters[j], distance);
-                    if (distance < minDistance)
-                    {
-                        closest = (clusters[i], clusters[j]);
-                        minDistance = distance;
-                    }
+                    newClusters.Add(oldCluster);
                 }
             }
+            var closest = FindClosestPair(
+                clusterPairs: joinedCluster.PairsWith(newClusters),
+                distanceFunc: (joinedCluster, other) => LanceWillamsSingleLinkage(clusterI, clusterJ, other)
+            );
+            newClusters.Add(joinedCluster);
 
-            //State.Iterations.Add(new HCIteration(
-            //    clusters: clusters,
-            //    minDistance: minDistance,
-            //    closestClusters: closest
-            //));
+
+            if (closest.Distance > prevIteration.ClosestPair.Distance)
+            {
+                closest = FindClosestPair(HCCluster.AllPairs(newClusters), DistanceMatrix.GetDistance);
+            }
+
+            State.Iterations.Add(new HCIteration(
+                clusters: newClusters,
+                closestPair: closest
+            ));
+            return true;
+        }
+
+        public string LastIterationInfo()
+        {
+            return State.Iterations.Last().ToString();
         }
     }
 }

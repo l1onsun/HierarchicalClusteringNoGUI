@@ -92,7 +92,7 @@ namespace TestHierarchicalСlustering
         }
     }
 
-    class HCClusterPair
+    class HCClusterPair: IComparable<HCClusterPair>
     {
         public HCCluster I;
         public HCCluster J;
@@ -103,6 +103,11 @@ namespace TestHierarchicalСlustering
             I = clusterI;
             J = clusterJ;
             Distance = distance;
+        }
+
+        public int CompareTo(HCClusterPair other)
+        {
+            return Distance.CompareTo(other.Distance);
         }
     }
 
