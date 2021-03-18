@@ -23,7 +23,7 @@ namespace TestHierarchicalСlustering
             return minDistance;
         }
 
-        public static double LanceWillamsSingleLinkage(IDistanceMatrix dm, HCCluster joinedA, HCCluster joinedB, HCCluster other)
+        public static double LanceWillamsSingleLinkage(this IDistanceMatrix dm, HCCluster joinedA, HCCluster joinedB, HCCluster other)
         {
             return 0.5 * dm.GetDistance(joinedA, other)
                    + 0.5 * dm.GetDistance(joinedB, other)

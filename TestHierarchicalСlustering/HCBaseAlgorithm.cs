@@ -52,7 +52,7 @@ namespace TestHierarchicalСlustering
             }
             var closest = distanceMatrix.FindClosestPair(
                 clusterPairs: joinedCluster.PairsWith(newClusters),
-                metric: (joinedCluster, other) => Metric.LanceWillamsSingleLinkage(distanceMatrix, clusterI, clusterJ, other)
+                metric: (joinedCluster, other) => distanceMatrix.LanceWillamsSingleLinkage(clusterI, clusterJ, other)
             );
             newClusters.Add(joinedCluster);
 
