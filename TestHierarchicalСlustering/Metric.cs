@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace TestHierarchicalСlustering
 {
-    class Metric
+    static class Metric
     {
         public static double Euclid(HCPoint a, HCPoint b)
         {

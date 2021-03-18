@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace TestHierarchicalСlustering
 {
@@ -15,15 +14,15 @@ namespace TestHierarchicalСlustering
         {
             return matrix[IDistanceMatrix.Ordered(a, b)];
         }
-        public double FindDistance(HCCluster a, HCCluster b, Func<HCCluster, HCCluster, double> distanceFunc)
+        public double FindDistance(HCCluster a, HCCluster b, Func<HCCluster, HCCluster, double> metric)
         {
-            double distance = distanceFunc(a, b);
+            double distance = metric(a, b);
             matrix[IDistanceMatrix.Ordered(a, b)] = distance;
             return distance;
         }
         public HCClusterPair FindClosestPair(
             IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
-            Func<HCCluster, HCCluster, double> distanceFunc
+            Func<HCCluster, HCCluster, double> metric
         )
         {
             HCClusterPair closest = new(
@@ -34,7 +33,7 @@ namespace TestHierarchicalСlustering
 
             foreach ((HCCluster I, HCCluster J) clusterPair in clusterPairs)
             {
-                double distance = FindDistance(clusterPair.I, clusterPair.J, distanceFunc);
+                double distance = FindDistance(clusterPair.I, clusterPair.J, metric);
 
                 if (distance < closest.Distance)
                 {

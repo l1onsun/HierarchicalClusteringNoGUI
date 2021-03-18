@@ -163,10 +163,10 @@ namespace TestHierarchicalСlustering
             return (i, j);
         }
         public double GetDistance(HCCluster a, HCCluster b);
-        public double FindDistance(HCCluster a, HCCluster b, Func<HCCluster, HCCluster, double> distanceFunc);
+        public double FindDistance(HCCluster a, HCCluster b, Func<HCCluster, HCCluster, double> metric);
         public HCClusterPair FindClosestPair(
             IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
-            Func<HCCluster, HCCluster, double> distanceFunc
+            Func<HCCluster, HCCluster, double> metric
         );
     }
 }

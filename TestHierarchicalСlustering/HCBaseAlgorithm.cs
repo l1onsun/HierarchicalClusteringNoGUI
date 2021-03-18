@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace TestHierarchicalСlustering
@@ -9,27 +8,22 @@ namespace TestHierarchicalСlustering
     {
 
         public HCState State;
-        public Matrix DistanceMatrix;
-
-        public virtual HCClusterPair FindClosestPair(
-            IEnumerable<(HCCluster I, HCCluster J)> clusterPairs,
-            Func<HCCluster, HCCluster, double> distanceFunc
-        )
-        {
-            return DistanceMatrix.FindClosestPair(clusterPairs, distanceFunc);
-        }
+        private readonly Matrix distanceMatrix;
 
         public HCBaseAlgorithm(Matrix distanceMatrix)
         {
-            this.DistanceMatrix = distanceMatrix;
+            this.distanceMatrix = distanceMatrix;
         }
 
         public void InitState(List<HCPoint> points)
         {
             State = new();
 
-            var clusters = HCCluster.ClusterPerPoint(points);
-            var closest = FindClosestPair(HCCluster.AllPairs(clusters), Metric.SingleLinkage);
+            List<HCCluster> clusters = HCCluster.ClusterPerPoint(points);
+            HCClusterPair closest = distanceMatrix.FindClosestPair(
+                clusterPairs: HCCluster.AllPairs(clusters), 
+                metric: Metric.SingleLinkage
+            );
 
             State.Iterations.Add(new HCIteration(
                 clusters: clusters,
@@ -56,15 +50,18 @@ namespace TestHierarchicalСlustering
                     newClusters.Add(oldCluster);
                 }
             }
-            var closest = FindClosestPair(
+            var closest = distanceMatrix.FindClosestPair(
                 clusterPairs: joinedCluster.PairsWith(newClusters),
-                distanceFunc: (joinedCluster, other) => Metric.LanceWillamsSingleLinkage(DistanceMatrix, clusterI, clusterJ, other)
+                metric: (joinedCluster, other) => Metric.LanceWillamsSingleLinkage(distanceMatrix, clusterI, clusterJ, other)
             );
             newClusters.Add(joinedCluster);
 
             if (closest.Distance > prevIteration.ClosestPair.Distance)
             {
-                closest = FindClosestPair(HCCluster.AllPairs(newClusters), DistanceMatrix.GetDistance);
+                closest = distanceMatrix.FindClosestPair(
+                    clusterPairs: HCCluster.AllPairs(newClusters),
+                    metric: distanceMatrix.GetDistance
+                );
             }
 
             State.Iterations.Add(new HCIteration(

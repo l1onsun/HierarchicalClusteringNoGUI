@@ -17,9 +17,9 @@ namespace TestHierarchicalСlustering
         {
             return matrix[IDistanceMatrix.Ordered(a, b)];
         }
-        public double FindDistance(HCCluster a, HCCluster b, Func<HCCluster, HCCluster, double> distanceFunc)
+        public double FindDistance(HCCluster a, HCCluster b, Func<HCCluster, HCCluster, double> metric)
         {
-            double distance = distanceFunc(a, b);
+            double distance = metric(a, b);
             matrix[IDistanceMatrix.Ordered(a, b)] = distance;
             return distance;
         }
